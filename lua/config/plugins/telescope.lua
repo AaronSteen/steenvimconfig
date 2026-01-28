@@ -28,9 +28,20 @@ return {
         vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
         vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch [G]rep' })
         vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
-        vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
+        vim.keymap.set('n', '<leader>sr', builtin.registers, { desc = '[S]earch [R]egisters' })
+        vim.keymap.set('n', '<leader>sb', builtin.buffers, { desc = '[S]earch [B]uffers' })
+
         vim.keymap.set( 'n', '<leader>en', function()
             builtin.find_files { cwd = vim.fn.stdpath('config') }
         end, { desc = '[E]dit [N]eovim config' } )
+
+        vim.keymap.set( 'n', '<leader>swf', function()
+            builtin.find_files { cwd = [[W:\]] }
+        end, { desc = '[S]earch [W]ork [F]iles' } )
+
+        vim.keymap.set( 'n', '<leader>swg', function()
+            builtin.live_grep { cwd = [[W:\]] }
+        end, { desc = '[S]earch [W]ork [G]rep' } )
+
     end,
 }

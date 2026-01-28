@@ -1,6 +1,5 @@
 --misc options
 vim.g.have_nerd_font = true
-vim.opt.undofile = true
 vim.opt.ignorecase = true
 vim.opt.splitright = true
 vim.opt.relativenumber = true
@@ -10,17 +9,25 @@ vim.opt.tabstop = 4
 vim.opt.scrolloff = 8 -- min screen lines to keep above and below cursor
 vim.opt.clipboard = 'unnamedplus'
 vim.opt.numberwidth = 7
-vim.opt.mouse = nvi
+vim.opt.mouse = "nvi"
 vim.opt.smartcase = true
 vim.opt.breakindent = true --[[Every wrapped line will continue visually indented
 (same amount of space as the beginning of that line),
 thus preserving horizontal blocks of text. ]] --
+vim.opt.autoread = true
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, { callback = function() vim.cmd("checktime") end })
+vim.opt.confirm = true
+vim.opt.undofile = true
 
---tab stuff
+--tab and indent stuff
 vim.opt.tabstop = 4
 vim.opt.softtabstop = 4 
 vim.opt.shiftwidth = 4 
 vim.opt.expandtab = true 
+vim.cmd('filetype plugin indent on')
+vim.opt.autoindent = true
+vim.opt.smartindent = true
+vim.opt.cinoptions = "(0"
 
 require("config.lazy")
 vim.cmd [[colorscheme vscode]]
@@ -55,17 +62,33 @@ vim.keymap.set("n", "<leader>v", "<cmd>vsp<CR>")
 
 require("config.lsp.lsp_init")
 
-vim.api.nvim_create_autocmd({"BufEnter", "BufWinEnter"}, {
-    pattern = {"*.c"},
-    callback = function()
-        vim.opt.makeprg = "build.bat"
-    end,
-})
-
 -- make related stuff
 
-vim.opt.shellpipe = "2>&1 >"
-vim.keymap.set("n", "<leader>b", "<cmd>make<cr>")
+vim.opt.switchbuf = {"useopen", "usetab", "uselast"} -- try to prevent new buffers being opened by quickfix list
+
+vim.keymap.set("n", "<leader>b", function()
+    vim.cmd('wall')
+    local pos = vim.fn.getpos('.')
+    vim.cmd('silent make')
+
+    local qflist = vim.fn.getqflist()
+
+    local valid_errors = {}
+    for _, item in ipairs(qflist) do
+        if item.bufnr > 0 and item.lnum > 0 then
+            table.insert(valid_errors, item)
+        end
+    end
+
+    if #valid_errors > 0 then
+        vim.cmd('copen')
+        vim.cmd('cc')
+    else
+        vim.cmd('cclose')
+        vim.fn.setpos('.', pos)
+    end
+end)
+
 vim.keymap.set("n", "<leader>qf", function()
     local qf_open = false
     for _, win in ipairs(vim.fn.getwininfo()) do
@@ -94,6 +117,74 @@ vim.keymap.set("n", "<leader>qf", function()
     end
 end)
 
+vim.api.nvim_create_autocmd({"BufEnter","BufWinEnter"}, {
+  pattern = {"*.c","*.cpp","*.h","*.hpp"},
+  callback = function(args)
+
+    vim.opt_local.makeprg = "cmd /c build.bat"
+    if not vim.env.NVIM_FORCE_TEE then
+        vim.opt_local.shellpipe = ">%s 2>&1"
+    end
+
+    -- replaces the stock errorformat
+    local efm = table.concat({
+      -- clang-style with parentheses and column
+      [[%E%f(%l\,%c):\ error:\ %m]],
+      [[%W%f(%l\,%c):\ warning:\ %m]],
+      [[%I%f(%l\,%c):\ note:\ %m]],
+
+      -- same without column (just in case)
+      [[%E%f(%l):\ error:\ %m]],
+      [[%W%f(%l):\ warning:\ %m]],
+      [[%I%f(%l):\ note:\ %m]],
+
+      -- include stack lines: "In file included from foo.c:2:"
+      [[%CIn\ file\ included\ from\ %f:%l:]],
+      -- occasional “from …:line:col:” continuation
+      [[%C\ \ \ \ from\ %f:%l:%c:]],
+    }, ",")
+
+    vim.opt_local.errorformat = efm
+  end,
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = {"c", "cpp"},
+    callback = function()
+        vim.opt_local.cindent = true
+    end,
+})
+
+-- Force one-buffer-per-file by real path
+-- local api, fn, uv = vim.api, vim.fn, vim.loop
+--
+-- local function realpath(p)
+--   if p == "" then return "" end
+--   return uv.fs_realpath(p) or fn.fnamemodify(p, ":p")
+-- end
+--
+-- api.nvim_create_autocmd({ "BufReadPre", "BufNewFile" }, {
+--   callback = function(args)
+--     local target = realpath(args.file or fn.bufname(args.buf))
+--     if target == "" then return end
+--     for _, b in ipairs(api.nvim_list_bufs()) do
+--       if b ~= args.buf and api.nvim_buf_is_loaded(b) and fn.buflisted(b) == 1 then
+--         local name = fn.bufname(b)
+--         if name ~= "" and realpath(name) == target then
+--           vim.notify(
+--             ("Duplicate suppressed; jumping to buffer #%d (%s)")
+--               :format(b, fn.fnamemodify(name, ":.")),
+--             vim.log.levels.WARN, { title = "Duplicate buffer detected" }
+--           )
+--           vim.schedule(function()
+--             vim.cmd("keepalt keepjumps buffer " .. b)
+--           end)
+--           return
+--         end
+--       end
+--     end
+--   end,
+-- })
 -- vim.api.nvim_create_autocmd({"BufEnter", "BufWinEnter"}, {
 --     pattern = {"*.go"},
 --     callback = function()
@@ -122,4 +213,5 @@ end)
 --         end
 --     end,
 -- })
+--
 --

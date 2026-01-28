@@ -9,6 +9,7 @@ return {
         {
             '<F6>',
             function()
+                
                 require('dap').continue()
             end,
             desc = 'Debug: Start/Continue',
@@ -106,7 +107,25 @@ return {
                     return 'C:\\Python313\\python.exe'
                 end;
                 console = "integratedTerminal",
-            },
+            },    
+
+        --     {
+        --         type = 'python',
+        --         request = 'launch',
+        --         name = 'Debug Game',
+        --         program = 'main.py',  
+        --         pythonPath = function() return 'C:\\Python313\\python.exe' end,
+        --         cwd = 'W:/newgame/src/newgame',
+        --         env = function()
+        --             if not vim.fn.getenv("DEBUGPY_ENABLE") then
+        --                 vim.fn.setenv("DEBUGPY_ENABLE", "1")
+        --             end
+        --         end,
+        --         stopOnEntry = true,
+        --         justMyCode = true,
+        --         subProcess = true,
+        --         console = "integratedTerminal",
+        --     },
         }
 
         dap.adapters.python = {
