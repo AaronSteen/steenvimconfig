@@ -69,10 +69,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
                 vim.fn.bufload(target_bufnr)
 
                 local start_line = target.range.start.line
-                local lines = vim.api.nvim_buf_get_lines(target_bufnr, start_line, start_line + 30, false)
+                local lines = vim.api.nvim_buf_get_lines(target_bufnr, start_line, start_line + 15, false)
 
                 -- Find the closing brace to show complete struct
-                local end_line = start_line + 30
+                local end_line = start_line + 15
                 for i, line in ipairs(lines) do
                     if line:match("^%s*}") then
                         end_line = start_line + i

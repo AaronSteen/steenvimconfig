@@ -13,6 +13,15 @@ return {
     },
     config = function()
         require('telescope').setup {
+            pickers = {
+                buffers = {
+                    mappings = {
+                        i = {
+                                ["<C-d>"] = "delete_buffer",
+                            }
+                    }
+                }
+            }, 
             extensions = {
                 ['ui-select'] = {
                     require('telescope.themes').get_dropdown(),
